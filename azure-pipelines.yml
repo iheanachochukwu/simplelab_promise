@@ -1,0 +1,52 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - "main"
+
+  paths:
+    include:
+      - "tf"
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: TerraformCLI@0
+  displayName: 'Terraform init'
+  inputs:
+    command: 'init'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/tf'
+    backendType: 'azurerm'
+    backendServiceArm: 'prod-00-network-spn' #use your service connection
+    backendAzureRmResourceGroupName: 'cloud-shell-storage-southcentralus'
+    backendAzureRmStorageAccountName: 'cs710037ffeaa055e81'
+    backendAzureRmContainerName: 'tfstatefile'
+    backendAzureRmKey: 'storageac.tfstate'
+    allowTelemetryCollection: true
+
+- task: TerraformCLI@0
+  displayName: 'Terraform validate'
+  inputs:
+    command: 'validate'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/tf'
+    allowTelemetryCollection: true
+
+- task: TerraformCLI@0
+  displayName: 'Terraform plan'
+  inputs:
+    command: 'plan'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/tf'
+    environmentServiceName: 'prod-00-network-spn'
+    allowTelemetryCollection: true
+    publishPlanResults: 'terraform-plan-drop'
+
+- task: TerraformCLI@0
+  displayName: 'Terraform apply'
+  inputs:
+    command: 'apply'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/tf'
+    environmentServiceName: 'prod-00-network-spn' #service connection
+
+
+ 
